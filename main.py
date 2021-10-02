@@ -9,10 +9,12 @@ with open("config.json", "r", encoding='utf_8') as read_file:
 
 
 async def start_handler(event: types.Message):
-    print(len(data['hello_phrase']) - 1)
+    keyboard = types.ReplyKeyboardMarkup(resize_keyboard=True)
+    buttons = [data["analyse"], data["check"], data["help"], data["error"]]
+    keyboard.add(*buttons)
     await event.answer(
         data['hello_phrase'][randint(0, len(data['hello_phrase']) - 1)].format(event.from_user.get_mention(as_html=True)),
-        parse_mode=types.ParseMode.HTML,
+        parse_mode=types.ParseMode.HTML, reply_markup=keyboard
     )
 
 
@@ -31,15 +33,6 @@ async def help_handler(event: types.Message):
     )
 
 
-# async def cmd_start(message: types.Message):
-#     keyboard = types.ReplyKeyboardMarkup()
-#     button_1 = types.KeyboardButton(text="")
-#     keyboard.add(button_1)
-#     button_2 = "Без пюрешки"
-#     keyboard.add(button_2)
-#     await message.answer("Как подавать котлеты?", reply_markup=keyboard)
-
-
 async def main():
     bot = Bot(token=BOT_TOKEN)
 
@@ -47,7 +40,6 @@ async def main():
         dispatcher = Dispatcher(bot=bot)
         dispatcher.register_message_handler(start_handler, commands={"start", "restart"})
         dispatcher.register_message_handler(get_mood_handler, commands={"advice"})
-        dispatcher.register_message_handler(help_handler, commands={"help"})
         await dispatcher.start_polling()
     finally:
         await bot.close()
