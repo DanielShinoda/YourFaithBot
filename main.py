@@ -3,7 +3,6 @@ import json
 from aiogram import Bot, Dispatcher, types
 from aiogram.dispatcher.filters import Text
 from random import randint
-import logging
 
 BOT_TOKEN = "2032324784:AAGtOWAHaLCnlQHIhwhBLQr4jDKrujOvPI8"
 with open("config.json", "r", encoding='utf_8') as read_file:
