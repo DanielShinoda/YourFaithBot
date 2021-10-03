@@ -21,12 +21,13 @@ async def main():
         dp = Dispatcher(bot=bot)
 
         async def start_handler(event: types.Message):
+
             requests.post('https://faithback.herokuapp.com/api/users/',
-                          json={"login": event.from_user.get_mention(as_html=True)})
+                          json={"login": event.from_user.get_mention()})
             keyboard = types.ReplyKeyboardMarkup(resize_keyboard=True)
             keyboard.add(*data['buttons'])
             await event.answer(
-                data['hello_phrase'][get_ind(data['hello_phrase'])].format(
+                data['hello_phrase'][0].format(
                     event.from_user.get_mention(as_html=True)),
                 parse_mode=types.ParseMode.HTML, reply_markup=keyboard
             )
