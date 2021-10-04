@@ -4,6 +4,7 @@ from aiogram import Bot, Dispatcher, types
 from aiogram.dispatcher.filters import Text
 from random import randint
 import requests
+from bs4 import BeautifulSoup
 
 BOT_TOKEN = "2032324784:AAGtOWAHaLCnlQHIhwhBLQr4jDKrujOvPI8"
 with open("config.json", "r", encoding='utf_8') as read_file:
@@ -21,9 +22,10 @@ async def main():
         dp = Dispatcher(bot=bot)
 
         async def start_handler(event: types.Message):
-
+            soup = BeautifulSoup(event.from_user.get_mention(as_html=True), 'html.parser')
+            user_name = soup.find_all('a')[0].text
             requests.post('https://faithback.herokuapp.com/api/users/',
-                          json={"login": event.from_user.get_mention()})
+                          json={"login": user_name})
             keyboard = types.ReplyKeyboardMarkup(resize_keyboard=True)
             keyboard.add(*data['buttons'])
             await event.answer(
