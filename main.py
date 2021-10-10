@@ -35,6 +35,14 @@ class Form(StatesGroup):
 storage = MemoryStorage()
 dp = Dispatcher(bot=bot, storage=storage)
 
+main_menu_keyboard = types.ReplyKeyboardMarkup(resize_keyboard=True)
+main_menu_keyboard.add(*[ui_config['button_names']['check_in'],
+                         ui_config['button_names']['statistics'],
+                         ui_config['button_names']['help']])
+
+analyse_keyboard_markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
+analyse_keyboard_markup.add(*['😁', '🙂', '😐', '😡'])
+
 
 async def start_handler(event: types.Message):
     user_name = event.from_user.username
@@ -49,15 +57,11 @@ async def start_handler(event: types.Message):
     # Если человек не найден в базе данных: добавляем его
     if not flag:
         requests.post('https://faithback.herokuapp.com/api/users/', json={"login": user_name})
-    keyboard = types.ReplyKeyboardMarkup(resize_keyboard=True)
-    keyboard.add(*[ui_config['button_names']['check_in'],
-                   ui_config['button_names']['statistics'],
-                   ui_config['button_names']['help']])
 
     await event.answer(
         dialogue_config['hello_phrase'][0].format(
             event.from_user.get_mention(as_html=True)),
-        parse_mode=types.ParseMode.HTML, reply_markup=keyboard
+        parse_mode=types.ParseMode.HTML, reply_markup=main_menu_keyboard
     )
 
 
@@ -70,8 +74,11 @@ async def help_handler(message: types.Message):
 # При нажатии на кнопку Анализ
 @dp.message_handler(Text(equals=ui_config['button_names']['check_in']))
 async def analyse_handler(message: types.Message):
+    await message.answer(
+        'Опиши своё состояние смайликом или текстом',
+        reply_markup=analyse_keyboard_markup
+    )
     await Form.mood.set()
-    await message.reply(dialogue_config["analyse_phrase"][get_ind(dialogue_config["analyse_phrase"])])
 
 
 # Запись в базу данных настроения
@@ -79,6 +86,7 @@ async def analyse_handler(message: types.Message):
 async def process_name(event: types.Message, state: FSMContext):
     user_name = event.from_user.username
     r = requests.get('https://faithback.herokuapp.com/api/users/')
+    print(r)
     user = -1
     for i in r.json():
         if i['login'] == user_name:
@@ -86,10 +94,14 @@ async def process_name(event: types.Message, state: FSMContext):
             break
     if user > 0:
         requests.post('https://faithback.herokuapp.com/api/mood/',
-                      json={"mood": event.text, "login": user})
+                      json={"mood": event.text, "user": user})
 
+    await event.reply(
+        dialogue_config["bye_phrase"][get_ind(dialogue_config["bye_phrase"])],
+        reply_markup=main_menu_keyboard
+    )
     await state.finish()
-    await event.reply(dialogue_config["bye_phrase"][get_ind(dialogue_config["bye_phrase"])])
+
 
 dp.register_message_handler(start_handler, commands={"start"})
 
