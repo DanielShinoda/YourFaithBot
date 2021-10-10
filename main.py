@@ -36,11 +36,13 @@ class Form(StatesGroup):
 storage = MemoryStorage()
 dp = Dispatcher(bot=bot, storage=storage)
 
+emoji = ''
+
 
 async def start_handler(event: types.Message):
     user_name = event.from_user.username
     # Если человек уже есть в базе данных, не нужно добавлять его ещё раз
-    if requests.get('https://faithback.herokuapp.com/api/users/{}/'.format(user_name)) == 200:
+    if requests.get('https://faithback.herokuapp.com/api/users/{}/'.format(user_name)).status_code != 200:
         requests.post('https://faithback.herokuapp.com/api/users/', json={"login": user_name})
 
     await event.answer(
@@ -60,9 +62,10 @@ async def help_handler(message: types.Message):
 @dp.message_handler(Text(equals=ui_config['button_names']['check_in']))
 async def analyse_handler(message: types.Message):
     await message.answer(
-        'Опиши своё состояние смайликом или текстом',
+        'Опиши своё состояние смайликом',
         reply_markup=keyboards.get_analyse_keyboard_markup()
     )
+
     await Form.mood.set()
 
 
@@ -70,15 +73,21 @@ async def analyse_handler(message: types.Message):
 @dp.message_handler(state=Form.mood)
 async def process_name(event: types.Message, state: FSMContext):
     user_name = event.from_user.username
-    r = requests.get('https://faithback.herokuapp.com/api/users/')
-    user = -1
-    for i in r.json():
-        if i['login'] == user_name:
-            user = i['id']
-            break
-    if user > 0:
-        requests.post('https://faithback.herokuapp.com/api/mood/',
-                      json={"mood": event.text, "user": user})
+    r = requests.get('https://faithback.herokuapp.com/api/users/{}/'.format(user_name))
+    if r.status_code != 200:
+        await event.reply('Напишите /start для регистрации')
+        await state.finish()
+
+    print(event.text)
+
+    requests.post(
+        'https://faithback.herokuapp.com/api/mood/',
+        json={
+            "mood": keyboards.transform_emoji(event.text),
+            "user": r.json()['id'],
+            "description": event.text
+        }
+    )
 
     await event.reply(
         dialogue_config["bye_phrase"][get_ind(dialogue_config["bye_phrase"])],

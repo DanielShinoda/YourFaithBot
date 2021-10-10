@@ -22,5 +22,18 @@ def get_main_menu_keyboard():
 
 def get_analyse_keyboard_markup():
     analyse_keyboard_markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
-    analyse_keyboard_markup.add(*['😁', '🙂', '😐', '😡'])
+    analyse_keyboard_markup.add(*['😁', '🙂', '😐', '😫', '😡'])
     return analyse_keyboard_markup
+
+
+emojis = {
+    '😁' : 4,
+    '🙂' : 3,
+    '😐' : 2,
+    '😫' : 1,
+    '😡' : 0
+}
+
+
+def transform_emoji(emoji):
+    return emojis[emoji]
