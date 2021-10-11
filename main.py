@@ -9,6 +9,7 @@ from aiogram.utils import executor
 import requests
 import keyboards
 import emotion_model
+import draw_graph
 
 
 BOT_TOKEN = "2032324784:AAGtOWAHaLCnlQHIhwhBLQr4jDKrujOvPI8"
@@ -57,6 +58,19 @@ async def start_handler(event: types.Message):
 @dp.message_handler(Text(equals=ui_config['button_names']['help']))
 async def help_handler(message: types.Message):
     await message.reply("/start - начало бота, инициализация юзера в базе данных")
+
+
+# При нажатии на кнопку Статистика
+@dp.message_handler(Text(equals=ui_config['button_names']['statistics']))
+async def statistics_handler(message: types.Message):
+    user_name = message.from_user.username
+    r = requests.get('https://faithback.herokuapp.com/api/users/{}/'.format(user_name))
+    if r.status_code != 200:
+        await message.reply('Напишите /start для регистрации')
+    else:
+        draw_graph.draw_graph(r.json())
+        photo = types.InputFile("stat.png")
+        await bot.send_photo(chat_id=message.chat.id, photo=photo)
 
 
 # При нажатии на кнопку Анализ
