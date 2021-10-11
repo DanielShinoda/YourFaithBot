@@ -21,20 +21,16 @@ def get_main_menu_keyboard():
 
 
 def get_analyse_keyboard_markup():
-    analyse_keyboard_markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
-    analyse_keyboard_markup.add(*['😁', '🙂', '😐', '😫', '😡'])
+    analyse_keyboard_markup = types.ReplyKeyboardMarkup(
+        resize_keyboard=True,
+        one_time_keyboard=True)
+    analyse_keyboard_markup.add(*['😁', '🙂', '😐', '😫', '😡', 'Главное меню'])
     return analyse_keyboard_markup
 
 
 def get_empty_keyboard_markup():
     empty_keyboard_markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
     return empty_keyboard_markup
-
-
-def get_text_keyboard_markup():
-    text_keyboard_markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
-    text_keyboard_markup.add(['Да', 'Нет'])
-    return text_keyboard_markup
 
 
 emojis = {

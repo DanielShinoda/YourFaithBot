@@ -90,6 +90,13 @@ async def analyse_handler(message: types.Message):
 
 @dp.message_handler(state=Form.emoji)
 async def process_emoji(event: types.Message, state: FSMContext):
+    if event.text == 'Главное меню':
+        await event.reply(
+            'Переход в главное меню',
+            reply_markup=keyboards.get_main_menu_keyboard()
+        )
+        await state.finish()
+        return
     async with state.proxy() as data:
         data['emoji'] = event.text
     print('emoji:', data['emoji'])
