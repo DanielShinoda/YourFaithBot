@@ -26,12 +26,23 @@ def get_analyse_keyboard_markup():
     return analyse_keyboard_markup
 
 
+def get_empty_keyboard_markup():
+    empty_keyboard_markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
+    return empty_keyboard_markup
+
+
+def get_text_keyboard_markup():
+    text_keyboard_markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
+    text_keyboard_markup.add(['Да', 'Нет'])
+    return text_keyboard_markup
+
+
 emojis = {
-    '😁' : 4,
-    '🙂' : 3,
-    '😐' : 2,
-    '😫' : 1,
-    '😡' : 0
+    '😁': 4,
+    '🙂': 3,
+    '😐': 2,
+    '😫': 1,
+    '😡': 0
 }
 
 

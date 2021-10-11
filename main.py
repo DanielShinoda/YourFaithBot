@@ -8,6 +8,7 @@ from random import randint
 from aiogram.utils import executor
 import requests
 import keyboards
+import emotion_model
 
 
 BOT_TOKEN = "2032324784:AAGtOWAHaLCnlQHIhwhBLQr4jDKrujOvPI8"
@@ -30,13 +31,13 @@ bot = Bot(token=BOT_TOKEN)
 
 
 class Form(StatesGroup):
+    emoji = State()  # Смайлик
+    description = State()  # текст
     mood = State()  # Получение настроения
 
 
 storage = MemoryStorage()
 dp = Dispatcher(bot=bot, storage=storage)
-
-emoji = ''
 
 
 async def start_handler(event: types.Message):
@@ -61,33 +62,51 @@ async def help_handler(message: types.Message):
 # При нажатии на кнопку Анализ
 @dp.message_handler(Text(equals=ui_config['button_names']['check_in']))
 async def analyse_handler(message: types.Message):
-    await message.answer(
-        'Опиши своё состояние смайликом',
-        reply_markup=keyboards.get_analyse_keyboard_markup()
-    )
+    user_name = message.from_user.username
+    r = requests.get('https://faithback.herokuapp.com/api/users/{}/'.format(user_name))
+    if r.status_code != 200:
+        await message.reply('Напишите /start для регистрации')
+    else:
+        await Form.emoji.set()
+        await message.reply(
+            'Опиши своё состояние смайликом',
+            reply_markup=keyboards.get_analyse_keyboard_markup()
+        )
 
-    await Form.mood.set()
+
+@dp.message_handler(state=Form.emoji)
+async def process_emoji(event: types.Message, state: FSMContext):
+    async with state.proxy() as data:
+        data['emoji'] = event.text
+    print('emoji:', data['emoji'])
+    await event.reply('Вкратце опиши своё настроение')
+    await Form.next()
+
+
+@dp.message_handler(state=Form.description)
+async def process_text(event: types.Message, state: FSMContext):
+    async with state.proxy() as data:
+        data['description'] = event.text
+    print('text:', data['description'])
+    await process_mood(event, state)
 
 
 # Запись в базу данных настроения
 @dp.message_handler(state=Form.mood)
-async def process_name(event: types.Message, state: FSMContext):
+async def process_mood(event: types.Message, state: FSMContext):
     user_name = event.from_user.username
     r = requests.get('https://faithback.herokuapp.com/api/users/{}/'.format(user_name))
-    if r.status_code != 200:
-        await event.reply('Напишите /start для регистрации')
-        await state.finish()
 
-    print(event.text)
-
-    requests.post(
-        'https://faithback.herokuapp.com/api/mood/',
-        json={
-            "mood": keyboards.transform_emoji(event.text),
-            "user": r.json()['id'],
-            "description": event.text
-        }
-    )
+    async with state.proxy() as data:
+        requests.post(
+            'https://faithback.herokuapp.com/api/mood/',
+            json={
+                "mood": keyboards.transform_emoji(data['emoji']),
+                "user": r.json()['id'],
+                "description": data['description'],
+                "description_tone": dict(emotion_model.get_emotion_array(data['description']))
+            }
+        )
 
     await event.reply(
         dialogue_config["bye_phrase"][get_ind(dialogue_config["bye_phrase"])],

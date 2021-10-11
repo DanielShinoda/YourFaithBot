@@ -1,34 +1,16 @@
-from math import sqrt
-import copy
-import pandas as pd
-import numpy as np
-import markovify
-import nltk
-import spacy
 import re
 import nltk
 import warnings
-import json
 import pymorphy2
 import copy
-import gensim
 import gensim.downloader as download_api
-from gensim.models import Word2Vec
-from pymystem3 import Mystem
-from string import punctuation
-from pprint import pprint
-from summa.keywords import keywords
-from nltk.corpus import gutenberg
-from nltk import download, sent_tokenize, word_tokenize
-from nltk.cluster.util import cosine_distance
-from nltk.corpus import stopwords
-from nltk.stem.snowball import RussianStemmer
-from nltk.tokenize import RegexpTokenizer
+
 
 nltk.download('gutenberg')
 nltk.download('stopwords')
 nltk.download("punkt")
 nltk.download('stopwords')
+nltk.download('wordnet', quiet=True)
 warnings.filterwarnings('ignore')
 russian_model = download_api.load('word2vec-ruscorpora-300')
 
