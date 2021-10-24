@@ -1,11 +1,12 @@
 from dataclasses import dataclass
 from datetime import timedelta, date
 from user import User
+import json
 
 @dataclass
 class HabitOptions:
-    text: str
     name: str
+    text: str
     next_call: date
     delay: timedelta
     user: User
@@ -25,8 +26,15 @@ class Habbit():
         return
 
 class HabbitCollection():
-    def read_from_file(self):
-        pass
+    def __init__(self, name):
+        self.name_ = name
+        self.habits_ = []
+
+    def init_from_file(self, file_path):
+        with open(file_path, "r", encoding='utf_8') as read_file:
+            habits_config = json.load(read_file)
+
+        # habits_config
 
     def __init__(self):
         pass
