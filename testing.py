@@ -1,9 +1,14 @@
 import unittest
 import habits
+import user
+from datetime import timedelta, date
 import life_sphere_cluster
 
 class TestStringMethods(unittest.TestCase):
     def test_upper(self):
+        user_one = user.User()
+        habit_one = habits.Habit(("", "", date.fromisoformat('2019-01-01'), timedelta(), user_one))
+
         self.assertEqual('foo'.upper(), 'FOO')
 
 def habit_suite():

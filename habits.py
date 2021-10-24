@@ -38,6 +38,7 @@ class Habit():
         return notify_user_()
 
     def notify_user_(self):
+        # how to notify?
         return HabitCallResult(True)
 
 class HabitCollection():
