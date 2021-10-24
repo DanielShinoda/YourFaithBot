@@ -1,31 +1,46 @@
 from dataclasses import dataclass
 from datetime import timedelta, date
 from user import User
+from typing import NamedTuple
 import json
+import copy
 
 @dataclass
 class HabitOptions:
     name: str
     text: str
-    next_call: date
-    delay: timedelta
+    call_time: date
+    call_delay: timedelta
     user: User
 
-class Habbit():
+class HabitCallResult(NamedTuple):
+    validated: bool
+
+class Habit():
+    def __init__(self, habit_object):
+        self.options_ = copy.copy(habit_object.options_)
+
     def __init__(self, options: HabitOptions):
-        self.options_ = options
+        self.options_ = copy.copy(options)
 
     def needs_call(self, time: date):
-        return time >= self.options_.next_call
+        return time >= self.options_.call_time
+
+    def update_call_time(self, current_time: date, update_to_past: bool):
+        pass
 
     def get_options(self):
         return self.options_
 
     def call(self):
-        self.options_.next_call += self.options_.delay;
-        return
+        assert needs_call()
+        self.options_.call_time += self.options_.delay;
+        return notify_user_()
 
-class HabbitCollection():
+    def notify_user_(self):
+        return HabitCallResult(True)
+
+class HabitCollection():
     def __init__(self, name):
         self.name_ = name
         self.habits_ = []
@@ -33,35 +48,45 @@ class HabbitCollection():
     def init_from_file(self, file_path):
         with open(file_path, "r", encoding='utf_8') as read_file:
             habits_config = json.load(read_file)
+        # read habits_config
 
-        # habits_config
+    def get_habits():
+        return self.habits_
 
     def __init__(self):
         pass
 
-class LifeSphereCluster():
-    def __init__(self):
-        pass
-
-class ClusterStrategy():
-    def __init__(self):
-        pass
-
-    def accepts_habit(self):
-        return True
-
-class ClusterProgress():
+class HabitsProgress():
     def __init__(self):
         self.habits_ = dict()
+        self.validations = dict()
 
-    def add_habit(habbit: Habbit):
-        self.habits_[habbit.get_options().name] = habbit
+    def add_habit(habit: Habit):
+        habit_name = habbit.get_options().name
+        self.habits_[habit_name] = habit
+        self.validations_[habit_name] = 0
 
-    def remove_habbit(habbit_name: str):
-        if habbit_name in self.habits_:
-            del self.habits_[habbit_name]
+        assert len(self.habits_) == len(self.validations_)
 
-    def call_habbits(self, time: date):
+    def remove_habit(habit_name: str):
+        self.habits_.pop(habit_name)
+        self.validations_.pop(habit_name)
+
+        assert len(self.habits_) == len(self.validations_)
+
+    def has_habit(habit_name: str):
+        return habit_name in self.habits_ 
+
+    def call_habits(self, time: date):
         for habit_name in self.habits_:
-            if self.habits_[habit_name].needs_call(time):
-                self.habits_[habit_name].call()
+            habit = self.habits_[habit_name]
+            if habit.needs_call(time):
+                call_result = habit.call()
+                if (call_result.validated):
+                    self.validations[habit_name] += 1
+
+    def get_habits_count():
+        return len(self.habits_)
+
+    def get_habits():
+        return self.habits_
