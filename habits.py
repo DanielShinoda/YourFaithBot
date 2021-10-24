@@ -4,6 +4,7 @@ from user import User
 from typing import NamedTuple
 import json
 import copy
+from notifications import MoodNotifiaction, BasicNotifiaction, Notification
 
 @dataclass
 class HabitOptions:
@@ -12,6 +13,16 @@ class HabitOptions:
     call_time: date
     call_delay: timedelta
     user: User
+
+def habitFromDictionary(dictionary, user_object):
+    habit = Habit((
+        dictionary["name"],
+        dictionary["text"],
+        dictionary["call_time"],
+        dictionary["call_delay"],
+        user_object
+        ))
+    return habit
 
 class HabitCallResult(NamedTuple):
     validated: bool
@@ -33,12 +44,17 @@ class Habit():
         return self.options_
 
     def call(self):
-        assert needs_call()
         self.options_.call_time += self.options_.delay;
         return notify_user_()
 
     def notify_user_(self):
-        # how to notify?
+        new_notification = BasicNotifiaction()
+
+        # temporary fix
+        if self.options_.name == "mood_check":
+            new_notification = MoodNotifiaction()
+
+        self.options_.user.send_notification(new_notification)
         return HabitCallResult(True)
 
 class HabitCollection():
@@ -91,3 +107,8 @@ class HabitsProgress():
 
     def get_habits():
         return self.habits_
+
+    def clear():
+        self.habits_.clear()
+        self.validations.clear()
+        assert len(self.habits_) == len(self.validations_)

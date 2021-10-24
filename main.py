@@ -10,7 +10,9 @@ import requests
 import keyboards
 import emotion_model
 import draw_graph
-
+import user
+import habits
+import life_sphere_cluster
 
 BOT_TOKEN = "2032324784:AAGtOWAHaLCnlQHIhwhBLQr4jDKrujOvPI8"
 
@@ -30,12 +32,47 @@ def get_ind(arr):
 
 bot = Bot(token=BOT_TOKEN)
 
+# load habbit collections
+habbit_collections = {
+    'sport' : HabitCollection(),
+    'mediatation' : HabitCollection(),
+    'sleep' : HabitCollection(),
+    'mood' : HabitCollection()
+    }
+
+for name in habbit_collections:
+    habbit_collections[name].init_from_file("./configs/" + name + "_config.json")
+
+# load users
+users = []
+
+def read_database_users():
+    return []
+
+database_list = read_database_users()
+for database_user in database_list:
+    # read them from datatable
+    chosen_life_spheres = ["sport", "meditation", "mood"]
+
+    # read user options
+    user_options = None
+
+    new_user = user.User(habbit_collections, chosen_life_spheres, user_options) 
+    
+    for life_sphere in chosen_life_spheres:
+        new_user.add_habits(life_sphere, 1)
+
+    # or read dict from database
+    # new_user.set_progress(dict[user.NAME_ID],  dict)
+
+# Global Timer must execute
+# for called_user in users:
+#    called_user.call_habits()
 
 class Form(StatesGroup):
     emoji = State()  # Смайлик
     description = State()  # текст
     mood = State()  # Получение настроения
-
 
 storage = MemoryStorage()
 dp = Dispatcher(bot=bot, storage=storage)

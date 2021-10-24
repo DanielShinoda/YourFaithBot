@@ -10,5 +10,10 @@ class Notification():
     def draw(self):
         pass
 
-    def get_result(self):
+class MoodNotifiaction(Notification):
+    def draw(self):
+        pass
+
+class BasicNotifiaction(Notification):
+    def draw(self):
         pass
