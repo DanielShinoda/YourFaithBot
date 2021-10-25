@@ -1,0 +1,17 @@
+{
+  "name": "sport",
+  "habits": [
+    {
+      "name": "light_sport",
+      "text": "Пора сделать зарядку",
+      "call_time": "Oct 25 2021  7:00AM",
+      "call_delay": "0 1 0"
+    },
+    {
+      "name": "heavy_sport",
+      "text": "Пора сделать тяжелую зарядку",
+      "call_time": "Oct 25 2021  8:00AM",
+      "call_delay": "0 1 0"
+    }
+  ]
+}
