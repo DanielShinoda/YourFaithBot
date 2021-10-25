@@ -9,9 +9,9 @@ from aiogram.utils import executor
 import requests
 import keyboards
 import emotion_model
-import draw_graph
 import user
 import habits
+from typing import NamedTuple
 import life_sphere_cluster
 
 BOT_TOKEN = "2032324784:AAGtOWAHaLCnlQHIhwhBLQr4jDKrujOvPI8"
@@ -32,22 +32,39 @@ def get_ind(arr):
 
 bot = Bot(token=BOT_TOKEN)
 
-# load habbit collections
-habbit_collections = {
-    'sport' : HabitCollection(),
-    'mediatation' : HabitCollection(),
-    'sleep' : HabitCollection(),
-    'mood' : HabitCollection()
+
+class Form(StatesGroup):
+    emoji = State()  # Смайлик
+    description = State()  # текст
+    mood = State()  # Получение настроения
+
+
+storage = MemoryStorage()
+dp = Dispatcher(bot=bot, storage=storage)
+
+emoji = ''
+
+# load habit collections
+habit_collections = {
+    'sport': habits.HabitCollection('sport'),
+    'meditation': habits.HabitCollection('meditation'),
+    'sleep': habits.HabitCollection('sleep'),
+    'mood': habits.HabitCollection('mood')
     }
 
-for name in habbit_collections:
-    habbit_collections[name].init_from_file("./configs/" + name + "_config.json")
+for name in habit_collections:
+    habit_collections[name].init_from_file("./configs/" + name + "_config.json")
 
 # load users
 users = []
 
+
 def read_database_users():
-    return []
+    r = requests.get('https://faithback.herokuapp.com/api/users/')
+
+    assert r.status_code == 200
+    return r.json()
+
 
 database_list = read_database_users()
 for database_user in database_list:
@@ -57,7 +74,7 @@ for database_user in database_list:
     # read user options
     user_options = None
 
-    new_user = user.User(habbit_collections, chosen_life_spheres, user_options) 
+    new_user = user.User(habit_collections, chosen_life_spheres, user_options)
     
     for life_sphere in chosen_life_spheres:
         new_user.add_habits(life_sphere, 1)
@@ -69,13 +86,40 @@ for database_user in database_list:
 # for called_user in users:
 #    called_user.call_habits()
 
-class Form(StatesGroup):
-    emoji = State()  # Смайлик
-    description = State()  # текст
-    mood = State()  # Получение настроения
 
-storage = MemoryStorage()
-dp = Dispatcher(bot=bot, storage=storage)
+class NotificationResult(NamedTuple):
+    example: int
+
+
+class Notification:
+    def __init__(self, habit: habits.Habit):
+        self.options_ = habit.options_
+
+    def draw(self, message: types.Message):
+        pass
+
+
+class MoodNotification(Notification):
+    async def draw(self, message: types.Message):
+        await analyse(message)
+
+
+class BasicNotification(Notification):
+    async def draw(self, message: types.Message):
+        await message.reply(
+            self.options_.text,
+            reply_markup=keyboards.get_answer_keyboard_markup()
+        )
+
+
+@dp.callback_query_handler(func=lambda c: c.data == 'habitCallResult')
+async def process_callback_basic_notification(callback_query: types.CallbackQuery):
+    pass
+
+
+@dp.callback_query_handler(func=lambda c: c.data == 'sport')
+async def process_callback_basic_notification(callback_query: types.CallbackQuery):
+    pass
 
 
 async def start_handler(event: types.Message):
@@ -87,7 +131,7 @@ async def start_handler(event: types.Message):
     await event.answer(
         dialogue_config['hello_phrase'][0].format(
             event.from_user.get_mention(as_html=True)),
-        parse_mode=types.ParseMode.HTML, reply_markup=keyboards.get_main_menu_keyboard()
+        parse_mode=types.ParseMode.HTML, reply_markup=keyboards.get_start_keyboard()
     )
 
 
@@ -97,22 +141,7 @@ async def help_handler(message: types.Message):
     await message.reply("/start - начало бота, инициализация юзера в базе данных")
 
 
-# При нажатии на кнопку Статистика
-@dp.message_handler(Text(equals=ui_config['button_names']['statistics']))
-async def statistics_handler(message: types.Message):
-    user_name = message.from_user.username
-    r = requests.get('https://faithback.herokuapp.com/api/users/{}/'.format(user_name))
-    if r.status_code != 200:
-        await message.reply('Напишите /start для регистрации')
-    else:
-        draw_graph.draw_graph(r.json())
-        photo = types.InputFile("stat.png")
-        await bot.send_photo(chat_id=message.chat.id, photo=photo)
-
-
-# При нажатии на кнопку Анализ
-@dp.message_handler(Text(equals=ui_config['button_names']['check_in']))
-async def analyse_handler(message: types.Message):
+async def analyse(message: types.Message):
     user_name = message.from_user.username
     r = requests.get('https://faithback.herokuapp.com/api/users/{}/'.format(user_name))
     if r.status_code != 200:
@@ -127,13 +156,6 @@ async def analyse_handler(message: types.Message):
 
 @dp.message_handler(state=Form.emoji)
 async def process_emoji(event: types.Message, state: FSMContext):
-    if event.text == 'Главное меню':
-        await event.reply(
-            'Переход в главное меню',
-            reply_markup=keyboards.get_main_menu_keyboard()
-        )
-        await state.finish()
-        return
     async with state.proxy() as data:
         data['emoji'] = event.text
     print('emoji:', data['emoji'])
@@ -165,11 +187,6 @@ async def process_mood(event: types.Message, state: FSMContext):
                 "description_tone": dict(emotion_model.get_emotion_array(data['description']))
             }
         )
-
-    await event.reply(
-        dialogue_config["bye_phrase"][get_ind(dialogue_config["bye_phrase"])],
-        reply_markup=keyboards.get_main_menu_keyboard()
-    )
     await state.finish()
 
 

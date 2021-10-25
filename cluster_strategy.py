@@ -1,11 +1,14 @@
 from dataclasses import dataclass
 import habits
+import copy
+
 
 @dataclass
 class ClusterStrategyOptions:
-    example: int 
+    example: int
 
-class ClusterStrategy():
+
+class ClusterStrategy:
     def __init__(self, options: ClusterStrategyOptions):
         self.options_ = copy.copy(options)
 

@@ -1,19 +1,23 @@
 from typing import NamedTuple
 
+
 class NotificationResult(NamedTuple):
     example: int
 
-class Notification():
+
+class Notification:
     def __init__(self):
         pass
 
     def draw(self):
         pass
 
-class MoodNotifiaction(Notification):
+
+class MoodNotification(Notification):
     def draw(self):
         pass
 
-class BasicNotifiaction(Notification):
+
+class BasicNotification(Notification):
     def draw(self):
         pass

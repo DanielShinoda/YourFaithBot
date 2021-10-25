@@ -1,12 +1,13 @@
 from user import User
 from habits import Habit, HabitsProgress, HabitCollection
-from cluster_strategy import ClusterStrategy
+from cluster_strategy import ClusterStrategy, ClusterStrategyOptions
 
-class LifeSphereCluster():
+
+class LifeSphereCluster:
     def __init__(self, life_sphere_name: str, habit_collection: HabitCollection):
         self.life_sphere_name_ = life_sphere_name
         self.habit_collection_ = habit_collection
-        self.strategy_ = ClusterStrategy()
+        self.strategy_ = ClusterStrategy(ClusterStrategyOptions(0))
         self.progress_ = HabitsProgress()
 
     def get_progress(self):
@@ -15,8 +16,8 @@ class LifeSphereCluster():
     def get_life_sphere_name(self):
         return self.life_sphere_name_
 
-    def add_habbits(self, habbits_count):
-        assert habbits_count >= 0
+    def add_habits(self, habits_count):
+        assert habits_count >= 0
 
         new_habits_count = 0
         cluster_habits = self.habit_collection_.get_habits()
@@ -26,31 +27,31 @@ class LifeSphereCluster():
             if not (is_acceptable and is_new):
                 continue
 
-            is_accepted_by_user = True # ask user
+            is_accepted_by_user = True  # ask user
             if not is_accepted_by_user:
                 continue
 
             new_habits_count += 1
-            self.progress_.add_habit(Habbit(cluster_habits[i]))
-            if new_habbits_count == habbits_count:
+            self.progress_.add_habit(Habit(cluster_habits[i]))
+            if new_habits_count == habits_count:
                 break
             
-        return new_habbits_count
+        return new_habits_count
 
-    def remove_habits(self, habbits_count):
-        assert habbits_count >= 0
-        assert habbits_count <= self.progress_.get_habits_count()
+    def remove_habits(self, habits_count):
+        assert habits_count >= 0
+        assert habits_count <= self.progress_.get_habits_count()
 
         remove_habits_count = 0
         cluster_habits = self.progress_.get_habits()
-        for habit_name in cluster_habbits:
-            is_blocked_by_user = False #ask user
+        for habit_name in cluster_habits:
+            is_blocked_by_user = False  # ask user
             if is_blocked_by_user:
                 continue
 
-            self.remove_habit(habit_name)
+            self.remove_habits(habit_name)
             remove_habits_count += 1
-            if remove_habits_count == habbits_count:
+            if remove_habits_count == habits_count:
                 break
 
         return remove_habits_count

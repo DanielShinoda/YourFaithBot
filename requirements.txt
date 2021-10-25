@@ -57,6 +57,7 @@ summa==1.2.0
 thinc==8.0.10
 tqdm==4.62.3
 typer==0.4.0
+typing==3.7.4.3
 typing-extensions==3.10.0.2
 Unidecode==1.3.2
 urllib3==1.26.7
