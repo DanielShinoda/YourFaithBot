@@ -24,3 +24,17 @@ def get_temporary_keyboard():
     return types.ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True).add(
         types.KeyboardButton("Вернуться в меню")
     )
+
+
+def get_call_delay_keyboard():
+    return types.ReplyKeyboardMarkup(resize_keyboard=True).add(
+            types.KeyboardButton("Да"),
+            types.KeyboardButton("Нет"),
+    )
+
+
+def get_call_delay_pick_keyboard():
+    return types.ReplyKeyboardMarkup(resize_keyboard=True).add(
+        types.KeyboardButton("Каждый день"),
+        types.KeyboardButton("Каждую неделю"),
+    )

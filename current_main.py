@@ -17,6 +17,7 @@ class HabitStates(StatesGroup):
     text = State()  # Текст
     call_time = State()  # Время напоминания
     call_delay = State()  # Частота напоминаний
+    call_delay_pick = State()  # Выбор
 
 
 class SettingsState(StatesGroup):
@@ -116,12 +117,15 @@ async def process_settings_time(event: types.Message, state: FSMContext):
         )
         return
 
-    requests.post(
-        'https://faithback.herokuapp.com/api/users/', json={
+    r = requests.post(
+        'https://faithback.herokuapp.com/api/users/'.format(event.from_user.username), json={
             "login": event.from_user.username,
+            "chat_id": event.from_user.id,
             "time_shift": event.text
         }
     )
+
+    print(r)
 
     await state.finish()
 
@@ -133,7 +137,139 @@ async def process_settings_time(event: types.Message, state: FSMContext):
 
 @dp.message_handler(Text(equals="Добавить"))
 async def add_habit_handler(event: types.Message):
-    pass
+    user_name = event.from_user.username
+
+    add_user_in_db(user_name, event.from_user.id)
+
+    await HabitStates.name.set()
+
+    await event.reply(
+        "Введи название привычки",
+        reply_markup=keyboards.get_temporary_keyboard()
+    )
+
+
+@dp.message_handler(state=HabitStates.name)
+async def process_habit_name(event: types.Message, state: FSMContext):
+    if event.text == "Вернуться в меню":
+        await state.finish()
+        await event.answer(
+            "Выход в главное меню!",
+            reply_markup=keyboards.get_main_menu_keyboard()
+        )
+        return
+
+    async with state.proxy() as data:
+        data['name'] = event.text
+
+    await event.answer(
+        "Введи, что мне прислать тебе, когда придёт время",
+        reply_markup=keyboards.get_temporary_keyboard()
+    )
+
+    await HabitStates.next()
+
+
+@dp.message_handler(state=HabitStates.text)
+async def process_habit_text(event: types.Message, state: FSMContext):
+    if event.text == "Вернуться в меню":
+        await state.finish()
+        await event.answer(
+            "Выход в главное меню!",
+            reply_markup=keyboards.get_main_menu_keyboard()
+        )
+        return
+
+    async with state.proxy() as data:
+        data['text'] = event.text
+
+    await event.answer(
+        "Теперь выбери дату и время, когда ты хочешь, чтобы я тебе напомнил\n"
+        "Если ты хочешь, чтобы напоминалка повторялась, введи ближайшую дату, когда мне надо напомнить\n"
+        "Формат: Jun 1 2005 1:33PM",
+        reply_markup=keyboards.get_temporary_keyboard()
+    )
+
+    await HabitStates.next()
+
+
+@dp.message_handler(state=HabitStates.call_time)
+async def process_habit_call_time(event: types.Message, state: FSMContext):
+    if event.text == "Вернуться в меню":
+        await state.finish()
+        await event.answer(
+            "Выход в главное меню!",
+            reply_markup=keyboards.get_main_menu_keyboard()
+        )
+        return
+
+    async with state.proxy() as data:
+        data['call_time'] = event.text
+
+    await event.answer(
+        "Хочешь сделать это событие регулярным?",
+        reply_markup=keyboards.get_call_delay_keyboard()
+    )
+
+    await HabitStates.next()
+
+
+@dp.message_handler(state=HabitStates.call_delay)
+async def process_habit_name(event: types.Message, state: FSMContext):
+    if event.text == "Нет":
+        await state.finish()
+
+        async with state.proxy() as data:
+            pass
+            # new_habit = habits.Habit(
+            #     habits.HabitOptions(
+            #         data['name'],
+            #         data['text'],
+            #         date(data['call_time']),
+            #
+            #     )
+            # )
+
+        async with state.proxy() as data:
+            temp = "Добавил привычку:\n" + \
+                   "Название привычки: {}\n".format(data['name']) + \
+                   "Буду писать тебе: {}\n".format(data['text']) + \
+                   "Ближайшее напоминание: {}\n".format(data['call_time'])
+            await event.answer(
+                temp,
+                reply_markup=keyboards.get_main_menu_keyboard()
+            )
+        return
+
+    await event.answer(
+        "Как часто напоминать?",
+        reply_markup=keyboards.get_call_delay_pick_keyboard()
+    )
+
+    await HabitStates.next()
+
+
+@dp.message_handler(state=HabitStates.call_delay_pick)
+async def process_habit_call_delay_pick(event: types.Message, state: FSMContext):
+    async with state.proxy() as data:
+        # new_habit = habits.Habit(
+        #     habits.HabitOptions(
+        #         data['name'],
+        #         data['text'],
+        #         date(data['call_time']),
+        #
+        #     )
+        # )
+        temp = "Добавил привычку:\n" + \
+               "Название привычки: {}\n".format(data['name']) + \
+               "Буду писать тебе: {}\n".format(data['text']) + \
+               "Ближайшее напоминание: {}\n".format(data['call_time']) + \
+               "Частота напоминания: {}".format(event.text)
+        await event.answer(
+            temp,
+            reply_markup=keyboards.get_main_menu_keyboard()
+        )
+    await state.finish()
 
 
 @dp.message_handler(Text(equals="Удалить"))
@@ -144,56 +280,6 @@ async def remove_habit_handler(event: types.Message):
 @dp.message_handler(Text(equals="Режим"))
 async def mode_handler(event: types.Message):
     pass
-
-
-# # Прописать добавление привычки
-# async def add_habit(message: types.Message):
-#     user_name = message.from_user.username
-#     r = requests.get('https://faithback.herokuapp.com/api/users/{}/'.format(user_name))
-#     if r.status_code != 200:
-#         await message.reply('Напишите /start для регистрации')
-#     else:
-#         await HabitForm.emoji.set()
-#         await message.reply(
-#             'Опиши своё состояние смайликом',
-#             reply_markup=keyboards.get_analyse_keyboard_markup()
-#         )
-#
-#
-# @dp.message_handler(state=HabitForm.emoji)
-# async def process_emoji(event: types.Message, state: FSMContext):
-#     async with state.proxy() as data:
-#         data['emoji'] = event.text
-#     print('emoji:', data['emoji'])
-#     await event.reply('Вкратце опиши своё настроение')
-#     await HabitForm.next()
-#
-#
-# @dp.message_handler(state=HabitForm.description)
-# async def process_text(event: types.Message, state: FSMContext):
-#     async with state.proxy() as data:
-#         data['description'] = event.text
-#     print('text:', data['description'])
-#     await process_mood(event, state)
-#
-#
-# # Запись в базу данных настроения
-# @dp.message_handler(state=HabitForm.mood)
-# async def process_mood(event: types.Message, state: FSMContext):
-#     user_name = event.from_user.username
-#     r = requests.get('https://faithback.herokuapp.com/api/users/{}/'.format(user_name))
-#
-#     async with state.proxy() as data:
-#         requests.post(
-#             'https://faithback.herokuapp.com/api/mood/',
-#             json={
-#                 "mood": keyboards.transform_emoji(data['emoji']),
-#                 "user": r.json()['id'],
-#                 "description": data['description'],
-#                 "description_tone": dict(emotion_model.get_emotion_array(data['description']))
-#             }
-#         )
-#     await state.finish()
 
 
 if __name__ == '__main__':
