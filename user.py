@@ -1,16 +1,22 @@
-from notifications import Notification
-from life_sphere_cluster import LifeSphereCluster
+from dataclasses import dataclass
+import life_sphere_cluster
 from datetime import timedelta, date
 import json
 import habits
-from notifications import Notification
+from bot_options import bot, dp, storage
+
 
 NAME_ID = "name"
 HABITS_ID = "habits"
 
 
+@dataclass
+class UserOptions:
+    chat_id: int
+
+
 class User:
-    def __init__(self, habit_collections, chosen_life_spheres, user_options=None):
+    def __init__(self, habit_collections, chosen_life_spheres, user_options: UserOptions):
         self.life_spheres_ = dict()
         self.user_options_ = user_options
 
@@ -18,7 +24,10 @@ class User:
 
             assert life_spheres_name in habit_collections
 
-            self.life_spheres_[life_spheres_name] = LifeSphereCluster(life_spheres_name, habit_collections)
+            self.life_spheres_[life_spheres_name] = life_sphere_cluster.LifeSphereCluster(
+                life_spheres_name,
+                habit_collections
+            )
 
     def set_progress(self, life_sphere_name, progress_dict):
         assert life_sphere_name in self.life_spheres_
@@ -37,3 +46,6 @@ class User:
 
     def add_habits(self, life_sphere_name, num_habits):
         self.life_spheres_[life_sphere_name].add_habits(num_habits)
+
+    def notify(self, text):
+        bot.send_message(self.user_options_.chat_id, text)

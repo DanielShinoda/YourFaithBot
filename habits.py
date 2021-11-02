@@ -1,12 +1,9 @@
 from dataclasses import dataclass
 from datetime import timedelta, date
-
-import main
-from user import User
+import user
 from typing import NamedTuple
 import json
 import copy
-from main import MoodNotification, BasicNotification, Notification
 
 
 @dataclass
@@ -15,7 +12,7 @@ class HabitOptions:
     text: str
     call_time: date
     call_delay: timedelta
-    user: User
+    user: user.User
 
 
 class HabitCallResult(NamedTuple):
@@ -54,13 +51,8 @@ class Habit:
         return self.notify_user_()
 
     def notify_user_(self):
-        # temporary fix
-        if self.options_.name == "mood":
-            main.MoodNotification(self)
-            return HabitCallResult(True)
-        else:
-            main.BasicNotification(self)
-            return HabitCallResult(True)
+        self.options_.user.notify(self.options_.text)
+        return HabitCallResult(True)
 
 
 class HabitsProgress:
