@@ -33,19 +33,17 @@ class User:
         assert life_sphere_name in self.life_spheres_
         assert progress_dict["name"] == life_sphere_name
 
-        self.life_spheres_.clear()
-
         for habit_dict in progress_dict[HABITS_ID]:
             new_habit = habits.habit_from_dictionary(habit_dict, self)
-            self.life_spheres_[life_sphere_name].add_habits(new_habit)
+            self.life_spheres_[life_sphere_name].add_habits([new_habit])
 
     def call_habits(self, time: date):
         for life_sphere_name in self.life_spheres_:
             cluster = self.life_spheres_[life_sphere_name]
             cluster.get_progress().call_habits(time)
 
-    def add_habits(self, life_sphere_name, num_habits):
-        self.life_spheres_[life_sphere_name].add_habits(num_habits)
+    def add_habits(self, life_sphere_name, new_habits):
+        self.life_spheres_[life_sphere_name].add_habits(new_habits)
 
     def notify(self, text):
         bot.send_message(self.user_options_.chat_id, text)

@@ -13,8 +13,8 @@ class LifeSphereCluster:
     def get_life_sphere_name(self):
         return self.life_sphere_name_
 
-    def add_habits(self, habits_):
-        for habit in habits_:
+    def add_habits(self, new_habits):
+        for habit in new_habits:
             self.progress_.add_habit(habit)
 
     def remove_habits(self, habits_names):

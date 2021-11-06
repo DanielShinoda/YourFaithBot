@@ -178,6 +178,19 @@ async def process_habit_name(event: types.Message, state: FSMContext):
                 )
             )
 
+            users[event.from_user.id].add_habits("habits", [new_habit])
+
+            requests.post(
+                'https://faithback.herokuapp.com/api/users/{}/clusters/habits/'.format(event.from_user.username), json={
+                    "name": new_habit.options_.name,
+                    "text": new_habit.options_.text,
+                    "call_time": new_habit.options_.call_time,
+                    "call_delay": new_habit.options_.call_delay,
+                    "user": new_habit.options_.user
+                },
+                cookies=headers
+            )
+
             temp = "Добавил привычку:\n" + \
                    "Название привычки: {}\n".format(md.bold(data['name'])) + \
                    "Буду писать тебе: {}\n".format(data['text']) + \
@@ -201,20 +214,47 @@ async def process_habit_name(event: types.Message, state: FSMContext):
 @dp.message_handler(state=HabitStates.call_delay_pick)
 async def process_habit_call_delay_pick(event: types.Message, state: FSMContext):
     async with state.proxy() as data:
-        new_habit = habits.Habit(
-            habits.HabitOptions(
-                name=data['name'],
-                text=data['text'],
-                call_time=datetime.strptime(data['call_time'], '%b %d %Y %I:%M%p'),
-                call_delay=timedelta(),
-                user=users[event.from_user.id]
+        if event.text == "Каждый день":
+            new_habit = habits.Habit(
+                habits.HabitOptions(
+                    name=data['name'],
+                    text=data['text'],
+                    call_time=datetime.strptime(data['call_time'], '%b %d %Y %I:%M%p'),
+                    call_delay=timedelta(days=1),
+                    user=users[event.from_user.id]
+                )
             )
+
+        if event.text == "Каждую неделю":
+            new_habit = habits.Habit(
+                habits.HabitOptions(
+                    name=data['name'],
+                    text=data['text'],
+                    call_time=datetime.strptime(data['call_time'], '%b %d %Y %I:%M%p'),
+                    call_delay=timedelta(weeks=1),
+                    user=users[event.from_user.id]
+                )
+            )
+
+        users[event.from_user.id].add_habits("habits", [new_habit])
+
+        requests.post(
+            'https://faithback.herokuapp.com/api/users/{}/clusters/habits/'.format(event.from_user.username), json={
+                "name": new_habit.options_.name,
+                "text": new_habit.options_.text,
+                "call_time": new_habit.options_.call_time,
+                "call_delay": new_habit.options_.call_delay,
+                "user": new_habit.options_.user
+            },
+            cookies=headers
         )
+
         temp = "Добавил привычку:\n" + \
                "Название привычки: {}\n".format(md.bold(data['name'])) + \
                "Буду писать тебе: {}\n".format(data['text']) + \
                "Ближайшее напоминание: {}\n".format(data['call_time']) + \
                "Частота напоминания: {}".format(event.text)
+
         await event.answer(
             temp,
             reply_markup=keyboards.get_main_menu_keyboard()
