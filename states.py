@@ -11,3 +11,7 @@ class HabitStates(StatesGroup):
 
 class SettingsState(StatesGroup):
     call_time = State()  # Название привычки
+
+
+class DeleteState(StatesGroup):
+    delete_habit = State()  # Удаление привычки

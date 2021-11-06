@@ -6,10 +6,10 @@ import requests
 import keyboards
 import habits
 from datetime import datetime, timedelta
-from bot_options import dp, headers
+from bot_options import bot, dp, headers
 import aiogram.utils.markdown as md
 from database_adding import add_new_user_to_users, add_user_in_db, users
-from states import HabitStates, SettingsState
+from states import HabitStates, SettingsState, DeleteState
 
 
 def read_database_users():
@@ -262,7 +262,60 @@ async def process_habit_call_delay_pick(event: types.Message, state: FSMContext)
 
 @dp.message_handler(Text(equals="Удалить"))
 async def remove_habit_handler(event: types.Message):
-    pass
+    r = requests.get(
+        'https://faithback.herokuapp.com/api/users/{}/'.format(event.from_user.username),
+        cookies=headers
+    )
+
+    cnt = 1
+    send_habits = ""
+
+    for habit in r.json()['habit_clusters'][0]['habits']:
+        send_habits += str(cnt) + ") " + habit['name'] + "\n"
+        cnt += 1
+
+    await DeleteState.delete_habit.set()
+
+    await event.reply(
+        "Я пронумеровал список всех твоих событий, отправь номер того, которое надо удалить:\n" + send_habits,
+        reply_markup=keyboards.get_temporary_keyboard()
+    )
+
+
+@dp.message_handler(state=DeleteState.delete_habit)
+async def delete_habit(event: types.Message, state: FSMContext):
+
+    if event.text == "Вернуться в меню":
+        await state.finish()
+        await event.answer(
+            "Выход в главное меню!",
+            reply_markup=keyboards.get_main_menu_keyboard()
+        )
+        return
+
+    r = requests.get(
+        'https://faithback.herokuapp.com/api/users/{}/'.format(event.from_user.username),
+        cookies=headers
+    )
+
+    allowed = {str(i + 1) for i in range(len(r.json()['habit_clusters'][0]['habits']))}
+
+    if event.text not in allowed:
+        await bot.send_message(chat_id=event.from_user.id, text="Пожалуйста, введи корректное число!")
+        return
+
+    url = 'https://faithback.herokuapp.com/api/habbit/{}'
+    requests.delete(
+        url.format(r.json()['habit_clusters'][0]['habits'][int(event.text) - 1]['id']),
+        cookies=headers
+    )
+
+    await event.answer(
+        "Готово!",
+        reply_markup=keyboards.get_main_menu_keyboard()
+    )
+
+    await state.finish()
 
 
 @dp.message_handler(Text(equals="Режим"))
