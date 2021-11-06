@@ -31,7 +31,7 @@ class User:
 
     def set_progress(self, life_sphere_name, progress_dict):
         assert life_sphere_name in self.life_spheres_
-        assert progress_dict.name == life_sphere_name
+        assert progress_dict["name"] == life_sphere_name
 
         self.life_spheres_.clear()
 

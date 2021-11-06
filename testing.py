@@ -4,6 +4,7 @@ import user
 from datetime import timedelta, date
 import life_sphere_cluster
 
+
 class TestStringMethods(unittest.TestCase):
     def test_upper(self):
         user_one = user.User()
@@ -11,10 +12,12 @@ class TestStringMethods(unittest.TestCase):
 
         self.assertEqual('foo'.upper(), 'FOO')
 
+
 def habit_suite():
     suite = unittest.TestSuite()
     suite.addTest(TestStringMethods('test_upper'))
     return suite
+
 
 if __name__ == '__main__':
     runner = unittest.TextTestRunner()
