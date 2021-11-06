@@ -184,9 +184,8 @@ async def process_habit_name(event: types.Message, state: FSMContext):
                 'https://faithback.herokuapp.com/api/users/{}/clusters/habits/'.format(event.from_user.username), json={
                     "name": new_habit.options_.name,
                     "text": new_habit.options_.text,
-                    "call_time": new_habit.options_.call_time,
-                    "call_delay": new_habit.options_.call_delay,
-                    "user": new_habit.options_.user
+                    "call_time": str(new_habit.options_.call_time),
+                    "call_delay": str(new_habit.options_.call_delay),
                 },
                 cookies=headers
             )
@@ -242,9 +241,8 @@ async def process_habit_call_delay_pick(event: types.Message, state: FSMContext)
             'https://faithback.herokuapp.com/api/users/{}/clusters/habits/'.format(event.from_user.username), json={
                 "name": new_habit.options_.name,
                 "text": new_habit.options_.text,
-                "call_time": new_habit.options_.call_time,
-                "call_delay": new_habit.options_.call_delay,
-                "user": new_habit.options_.user
+                "call_time": str(new_habit.options_.call_time),
+                "call_delay": str(new_habit.options_.call_delay),
             },
             cookies=headers
         )
