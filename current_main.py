@@ -11,6 +11,7 @@ from bot_options import bot, dp, headers
 import aiogram.utils.markdown as md
 from database_adding import add_new_user_to_users, add_user_in_db, users
 from states import HabitStates, SettingsState, DeleteState
+import timetable
 from notificator import Notificator
 
 
