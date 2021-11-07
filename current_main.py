@@ -70,8 +70,6 @@ async def process_settings_time(event: types.Message, state: FSMContext):
         )
         return
 
-    
-
     requests.post(
         'https://faithback.herokuapp.com/api/users/{}/'.format(event.from_user.username), json={
             "time_shift": event.text,
