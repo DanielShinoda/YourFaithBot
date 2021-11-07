@@ -9,6 +9,7 @@ import copy
 class Notificator:
     def __init__(self):
         pass
+
     def start(self):
         while True:
             r = requests.get('https://faithback.herokuapp.com/api/users/', cookies=headers)
