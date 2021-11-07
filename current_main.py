@@ -10,6 +10,7 @@ from bot_options import bot, dp, headers
 import aiogram.utils.markdown as md
 from database_adding import add_new_user_to_users, add_user_in_db, users
 from states import HabitStates, SettingsState, DeleteState
+import timetable
 
 
 def read_database_users():
@@ -275,8 +276,6 @@ async def remove_habit_handler(event: types.Message):
         cookies=headers
     )
 
-    print(len(r.json()['habit_clusters'][0]['habits']))
-
     if len(r.json()['habit_clusters'][0]['habits']) == 0:
         await bot.send_message(chat_id=event.from_user.id, text="Для начала добавь привычку. Список привычек пуст!")
         return
@@ -339,7 +338,16 @@ async def delete_habit(event: types.Message, state: FSMContext):
 
 @dp.message_handler(Text(equals="Режим"))
 async def mode_handler(event: types.Message):
-    pass
+    new_tt = timetable.TimeTable(event.from_user.username)
+    tt = await new_tt.get_week_timetable()
+
+    text_to_send = ""
+
+    for day, names in tt.items():
+        text_to_send += day + ": " + "".join((e + ", ") for e in names)
+        text_to_send = text_to_send[:-2] + "\n"
+
+    await bot.send_message(chat_id=event.from_user.id, text=text_to_send)
 
 
 if __name__ == '__main__':
