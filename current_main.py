@@ -53,7 +53,7 @@ async def settings_handler(event: types.Message):
     await SettingsState.call_time.set()
 
     await event.reply(
-        "Чтобы напоминать тебе о делах вовремя мне нужно"
+        "Чтобы напоминать тебе о делах вовремя мне нужно "
         "знать твой часовой пояс, напиши его в формате +/-**:** UTC",
         reply_markup=keyboards.get_temporary_keyboard()
     )
@@ -68,6 +68,8 @@ async def process_settings_time(event: types.Message, state: FSMContext):
             reply_markup=keyboards.get_main_menu_keyboard()
         )
         return
+
+    
 
     requests.post(
         'https://faithback.herokuapp.com/api/users/{}/'.format(event.from_user.username), json={
@@ -150,6 +152,12 @@ async def process_habit_call_time(event: types.Message, state: FSMContext):
             "Выход в главное меню!",
             reply_markup=keyboards.get_main_menu_keyboard()
         )
+        return
+
+    try:
+        datetime.strptime(event.text, '%b %d %Y %I:%M%p')
+    except ValueError:
+        await bot.send_message(chat_id=event.from_user.id, text="Пожалуйста, введи дату в корректном формате.")
         return
 
     async with state.proxy() as data:
@@ -267,6 +275,12 @@ async def remove_habit_handler(event: types.Message):
         cookies=headers
     )
 
+    print(len(r.json()['habit_clusters'][0]['habits']))
+
+    if len(r.json()['habit_clusters'][0]['habits']) == 0:
+        await bot.send_message(chat_id=event.from_user.id, text="Для начала добавь привычку. Список привычек пуст!")
+        return
+
     cnt = 1
     send_habits = ""
 
@@ -279,6 +293,11 @@ async def remove_habit_handler(event: types.Message):
     await event.reply(
         "Я пронумеровал список всех твоих событий, отправь номер того, которое надо удалить:\n" + send_habits,
         reply_markup=keyboards.get_temporary_keyboard()
+    )
+
+    r = requests.get(
+        'https://faithback.herokuapp.com/api/users/{}/'.format(event.from_user.username),
+        cookies=headers
     )
 
 
