@@ -34,7 +34,7 @@ class Notificator:
 
                         print("Нужно отправить:", user_chat_id, name, habit["name"], obj_time)
 
-                        sf = asyncio.run_coroutine_threadsafe(self.notify(user_chat_id, habit["name"]), loop)
+                        sf = asyncio.run_coroutine_threadsafe(self.notify(user_chat_id, habit["text"]), loop)
                         sf.result()
 
                         print("Отправил:", user_chat_id, name, habit["name"], obj_time)
