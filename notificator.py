@@ -24,10 +24,10 @@ class Notificator:
                 removed_ids = []
                 added_obj = []
                 for habit in user['habit_clusters'][0]['habits']:
-                    print(user_chat_id, name, habit["name"], obj_time)
 
                     obj_time = datetime.strptime(habit['call_time'],  '%Y-%m-%d %H:%M:%S')
                     habit_delta = timeparse(habit['call_delay'])
+                    print(user_chat_id, name, habit["name"])
 
                     if obj_time < datetime.now():
                         removed_ids.append(habit['id'])
