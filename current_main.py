@@ -13,6 +13,7 @@ from database_adding import add_new_user_to_users, add_user_in_db, users
 from states import HabitStates, SettingsState, DeleteState
 import timetable
 from notificator import Notificator
+import asyncio
 
 
 def read_database_users():
@@ -21,16 +22,11 @@ def read_database_users():
     return r.json()
 
 
-# def notify_users(time: date):
-#     global users
-#
-#     for user_ in users:
-#         user_.call_habits(time)
-
-
 database_list = read_database_users()
 for db_user in database_list:
     add_new_user_to_users(db_user)
+
+
 ntf = Notificator()
 threading.Thread(target=ntf.start, daemon=True).start()
 

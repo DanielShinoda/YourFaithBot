@@ -29,6 +29,7 @@ MarkupSafe==2.0.1
 matplotlib==3.4.3
 multidict==5.1.0
 murmurhash==1.0.5
+nest-asyncio==1.5.1
 nltk==3.6.3
 numpy==1.21.2
 packaging==21.0
