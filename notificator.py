@@ -17,6 +17,8 @@ class Notificator:
 
     def start(self):
         while True:
+            #  Log: function entry
+            #  Log: check code from database
             r = requests.get('https://faithback.herokuapp.com/api/users/', cookies=headers)
             for user in r.json():
                 name = user['login']
@@ -33,7 +35,7 @@ class Notificator:
                         removed_ids.append(habit['id'])
 
                         print("Нужно отправить:", user_chat_id, name, habit["name"], obj_time)
-
+                        #  Log: сложный момент, в многопоточной программе запускается асинхронная функция
                         sf = asyncio.run_coroutine_threadsafe(self.notify(user_chat_id, habit["text"]), loop)
                         sf.result()
 
@@ -45,12 +47,14 @@ class Notificator:
 
                 url = 'https://faithback.herokuapp.com/api/habbit/{}'
                 for user_id in removed_ids:
+                    #  Log: check code from database
                     requests.delete(
                         url.format(user_id),
                         cookies=headers
                     )
 
                 for obj in added_obj:
+                    #  Log: check code from database
                     requests.post(
                         'https://faithback.herokuapp.com/api/users/{}/clusters/habits/'.format(name), json={
                             "name": obj.name,
@@ -63,6 +67,8 @@ class Notificator:
             time.sleep(100)
 
     async def notify(self, uid, name):
+        #  Log: function entry
+        #  Log: bot sends message
         await bot.send_message(
             chat_id=uid,
             text=f"Напоминаю: {name}"

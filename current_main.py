@@ -17,6 +17,7 @@ import asyncio
 
 
 def read_database_users():
+    #  Log: check code from database
     r = requests.get('https://faithback.herokuapp.com/api/users/', cookies=headers)
     assert r.status_code == 200
     return r.json()
@@ -28,13 +29,15 @@ for db_user in database_list:
 
 
 ntf = Notificator()
+#  Log: smth to check threading
 threading.Thread(target=ntf.start, daemon=True).start()
 
 
 @dp.message_handler(commands="start")
 async def start_handler(event: types.Message):
+    #  Log: function entry
     user_name = event.from_user.username
-
+    #  Log: Check if user in database
     add_user_in_db(user_name, event.from_user.id)
 
     await event.answer(
@@ -47,8 +50,9 @@ async def start_handler(event: types.Message):
 
 @dp.message_handler(Text(equals="Настройки"))
 async def settings_handler(event: types.Message):
+    #  Log: function entry
     user_name = event.from_user.username
-
+    #  Log: Check if user in database
     add_user_in_db(user_name, event.from_user.id)
 
     await SettingsState.call_time.set()
@@ -62,14 +66,16 @@ async def settings_handler(event: types.Message):
 
 @dp.message_handler(state=SettingsState.call_time)
 async def process_settings_time(event: types.Message, state: FSMContext):
+    #  Log: function entry
     if event.text == "Вернуться в меню":
         await state.finish()
+        #  Log: bot sends message
         await event.answer(
             "Выход в главное меню!",
             reply_markup=keyboards.get_main_menu_keyboard()
         )
         return
-
+    #  Log: check code from database
     requests.post(
         'https://faithback.herokuapp.com/api/users/{}/'.format(event.from_user.username), json={
             "time_shift": event.text,
@@ -78,7 +84,7 @@ async def process_settings_time(event: types.Message, state: FSMContext):
     )
 
     await state.finish()
-
+    #  Log: bot sends message
     await event.answer(
         "Запомнил!",
         reply_markup=keyboards.get_main_menu_keyboard()
@@ -87,12 +93,13 @@ async def process_settings_time(event: types.Message, state: FSMContext):
 
 @dp.message_handler(Text(equals="Добавить"))
 async def add_habit_handler(event: types.Message):
+    #  Log: function entry
     user_name = event.from_user.username
 
     add_user_in_db(user_name, event.from_user.id)
 
     await HabitStates.name.set()
-
+    #  Log: bot sends message
     await event.reply(
         "Введи название привычки",
         reply_markup=keyboards.get_temporary_keyboard()
@@ -101,8 +108,10 @@ async def add_habit_handler(event: types.Message):
 
 @dp.message_handler(state=HabitStates.name)
 async def process_habit_name(event: types.Message, state: FSMContext):
+    #  Log: function entry
     if event.text == "Вернуться в меню":
         await state.finish()
+        #  Log: bot sends message
         await event.answer(
             "Выход в главное меню!",
             reply_markup=keyboards.get_main_menu_keyboard()
@@ -111,7 +120,7 @@ async def process_habit_name(event: types.Message, state: FSMContext):
 
     async with state.proxy() as data:
         data['name'] = event.text
-
+    #  Log: bot sends message
     await event.answer(
         "Введи, что мне прислать тебе, когда придёт время",
         reply_markup=keyboards.get_temporary_keyboard()
@@ -122,8 +131,10 @@ async def process_habit_name(event: types.Message, state: FSMContext):
 
 @dp.message_handler(state=HabitStates.text)
 async def process_habit_text(event: types.Message, state: FSMContext):
+    #  Log: function entry
     if event.text == "Вернуться в меню":
         await state.finish()
+        #  Log: bot sends message
         await event.answer(
             "Выход в главное меню!",
             reply_markup=keyboards.get_main_menu_keyboard()
@@ -132,7 +143,7 @@ async def process_habit_text(event: types.Message, state: FSMContext):
 
     async with state.proxy() as data:
         data['text'] = event.text
-
+    #  Log: bot sends message
     await event.answer(
         "Теперь выбери дату и время, когда ты хочешь, чтобы я тебе напомнил\n"
         "Если ты хочешь, чтобы напоминалка повторялась, введи ближайшую дату, когда мне надо напомнить\n"
@@ -145,8 +156,10 @@ async def process_habit_text(event: types.Message, state: FSMContext):
 
 @dp.message_handler(state=HabitStates.call_time)
 async def process_habit_call_time(event: types.Message, state: FSMContext):
+    #  Log: function entry
     if event.text == "Вернуться в меню":
         await state.finish()
+        #  Log: bot sends message
         await event.answer(
             "Выход в главное меню!",
             reply_markup=keyboards.get_main_menu_keyboard()
@@ -156,12 +169,13 @@ async def process_habit_call_time(event: types.Message, state: FSMContext):
     try:
         datetime.strptime(event.text, '%b %d %Y %I:%M%p')
     except ValueError:
+        #  Log: bot sends message
         await bot.send_message(chat_id=event.from_user.id, text="Пожалуйста, введи дату в корректном формате.")
         return
 
     async with state.proxy() as data:
         data['call_time'] = event.text
-
+    #  Log: bot sends message
     await event.answer(
         "Хочешь сделать это событие регулярным?",
         reply_markup=keyboards.get_call_delay_keyboard()
@@ -172,6 +186,7 @@ async def process_habit_call_time(event: types.Message, state: FSMContext):
 
 @dp.message_handler(state=HabitStates.call_delay)
 async def process_habit_name(event: types.Message, state: FSMContext):
+    #  Log: function entry
     if event.text == "Нет":
         # Нам не нужна регулярность, один раз повторяется.
         async with state.proxy() as data:
@@ -186,7 +201,7 @@ async def process_habit_name(event: types.Message, state: FSMContext):
             )
 
             users[event.from_user.id].add_habits("habits", [new_habit])
-
+            #  Log: check code from database
             requests.post(
                 'https://faithback.herokuapp.com/api/users/{}/clusters/habits/'.format(event.from_user.username), json={
                     "name": new_habit.options_.name,
@@ -203,12 +218,13 @@ async def process_habit_name(event: types.Message, state: FSMContext):
                    "Ближайшее напоминание: {}\n".format(data['call_time'])
 
             await state.finish()
+            #  Log: bot sends message
             await event.answer(
                 temp,
                 reply_markup=keyboards.get_main_menu_keyboard()
             )
         return
-
+    #  Log: bot sends message
     await event.answer(
         "Как часто напоминать?",
         reply_markup=keyboards.get_call_delay_pick_keyboard()
@@ -219,6 +235,7 @@ async def process_habit_name(event: types.Message, state: FSMContext):
 
 @dp.message_handler(state=HabitStates.call_delay_pick)
 async def process_habit_call_delay_pick(event: types.Message, state: FSMContext):
+    #  Log: function entry
     async with state.proxy() as data:
         if event.text == "Каждый день":
             new_habit = habits.Habit(
@@ -243,7 +260,7 @@ async def process_habit_call_delay_pick(event: types.Message, state: FSMContext)
             )
 
         users[event.from_user.id].add_habits("habits", [new_habit])
-
+        #  Log: check code from database
         requests.post(
             'https://faithback.herokuapp.com/api/users/{}/clusters/habits/'.format(event.from_user.username), json={
                 "name": new_habit.options_.name,
@@ -259,7 +276,7 @@ async def process_habit_call_delay_pick(event: types.Message, state: FSMContext)
                "Буду писать тебе: {}\n".format(data['text']) + \
                "Ближайшее напоминание: {}\n".format(data['call_time']) + \
                "Частота напоминания: {}".format(event.text)
-
+        #  Log: bot sends message
         await event.answer(
             temp,
             reply_markup=keyboards.get_main_menu_keyboard()
@@ -269,12 +286,15 @@ async def process_habit_call_delay_pick(event: types.Message, state: FSMContext)
 
 @dp.message_handler(Text(equals="Удалить"))
 async def remove_habit_handler(event: types.Message):
+    #  Log: function entry
+    #  Log: check code from database
     r = requests.get(
         'https://faithback.herokuapp.com/api/users/{}/'.format(event.from_user.username),
         cookies=headers
     )
 
     if len(r.json()['habit_clusters'][0]['habits']) == 0:
+        #  Log: bot sends message
         await bot.send_message(chat_id=event.from_user.id, text="Для начала добавь привычку. Список привычек пуст!")
         return
 
@@ -286,12 +306,12 @@ async def remove_habit_handler(event: types.Message):
         cnt += 1
 
     await DeleteState.delete_habit.set()
-
+    #  Log: bot sends message
     await event.reply(
         "Я пронумеровал список всех твоих событий, отправь номер того, которое надо удалить:\n" + send_habits,
         reply_markup=keyboards.get_temporary_keyboard()
     )
-
+    #  Log: check code from database
     r = requests.get(
         'https://faithback.herokuapp.com/api/users/{}/'.format(event.from_user.username),
         cookies=headers
@@ -300,15 +320,17 @@ async def remove_habit_handler(event: types.Message):
 
 @dp.message_handler(state=DeleteState.delete_habit)
 async def delete_habit(event: types.Message, state: FSMContext):
+    #  Log: function entry
 
     if event.text == "Вернуться в меню":
         await state.finish()
+        #  Log: bot sends message
         await event.answer(
             "Выход в главное меню!",
             reply_markup=keyboards.get_main_menu_keyboard()
         )
         return
-
+    #  Log: check code from database
     r = requests.get(
         'https://faithback.herokuapp.com/api/users/{}/'.format(event.from_user.username),
         cookies=headers
@@ -317,15 +339,17 @@ async def delete_habit(event: types.Message, state: FSMContext):
     allowed = {str(i + 1) for i in range(len(r.json()['habit_clusters'][0]['habits']))}
 
     if event.text not in allowed:
+        #  Log: bot sends message
         await bot.send_message(chat_id=event.from_user.id, text="Пожалуйста, введи корректное число!")
         return
 
     url = 'https://faithback.herokuapp.com/api/habbit/{}'
+    #  Log: check code from database
     requests.delete(
         url.format(r.json()['habit_clusters'][0]['habits'][int(event.text) - 1]['id']),
         cookies=headers
     )
-
+    #  Log: bot sends message
     await event.answer(
         "Готово!",
         reply_markup=keyboards.get_main_menu_keyboard()
@@ -336,6 +360,7 @@ async def delete_habit(event: types.Message, state: FSMContext):
 
 @dp.message_handler(Text(equals="Режим"))
 async def mode_handler(event: types.Message):
+    #  Log: function entry
     new_tt = timetable.TimeTable(event.from_user.username)
     tt = await new_tt.get_week_timetable()
 
@@ -344,7 +369,7 @@ async def mode_handler(event: types.Message):
     for day, names in tt.items():
         text_to_send += day + ": " + "".join((e + ", ") for e in names)
         text_to_send = text_to_send[:-2] + "\n"
-
+    #  Log: bot sends message
     await bot.send_message(chat_id=event.from_user.id, text=text_to_send)
 
 

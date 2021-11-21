@@ -10,6 +10,8 @@ class TimeTable:
         self.username = username
 
     async def get_week_timetable(self):
+        #  Log: check code from database
+        #  Log: function entry
         r = requests.get(
             'https://faithback.herokuapp.com/api/users/{}/'.format(self.username),
             cookies=headers
